@@ -1,0 +1,74 @@
+# Load required packages
+library(tximport)
+library(tidyverse)
+library(DESeq2)
+library(ggplot2)
+library(pcaExplorer) # For 3D PCA plots
+# To check the effects of transformations on the variance
+library("vsn")
+library('EnhancedVolcano')
+# Before proceeding run the following code below to scale up the process
+library("BiocParallel")
+register(MulticoreParam(5))
+
+# Import sample data 
+samples <- read.delim("/Users/copara/Desktop/Research Files/samples.txt", header =T)
+sample_table <- data.frame(
+  sample = c(samples$sample),
+  strain = c(samples$strain),
+  sex = c(samples$sex),
+  diet = c(samples$diet)
+)
+
+# Specify design formulas 
+# Here we set the design formula to to allow for strain-specific condition effects.
+# i.e. to test if the log2 fold change attributable to a given (strain) is different based on other factors (sex and diet) 
+# For more info refer to Interactions section in the DESEq2 vignette: 
+model <- ~ strain + strain:sex + strain:diet
+
+# ------------------------------------------------------------------
+# For genes
+# Tximport step
+# Set the path to the directory containing the RSEM transcript abundance files
+dir <- "/Users/copara/Desktop/Research Files/ind_gen_mapping_results/Gene_results"
+
+# Get the list of RSEM gene abundance files
+file_list <- list.files(dir, pattern = "\\.genes.results$", full.names = TRUE)
+
+# Import RSEM transcript abundance data using tximport
+txi <- tximport(file_list, type = "rsem", txIn = FALSE, txOut = FALSE)
+
+# DESeq2 normalization step 
+# Trimming and normalization of dataset
+nonzero_lengths <- apply(txi$length > 0, 1, all)
+txi_no_zero_length <- list(abundance=txi$abundance[nonzero_lengths,],
+                           counts=txi$counts[nonzero_lengths,],
+                           length=txi$length[nonzero_lengths,],
+                           countsFromAbundance=txi$countsFromAbundance)
+
+# Creating dds object 
+dds <- DESeqDataSetFromTximport(txi_no_zero_length, colData = sample_table, design = model)
+
+# Differential expression analyses results
+dds <- DESeq(dds, parallel=TRUE)
+res <- results(dds, alpha = 0.01, parallel=TRUE)# to retrieve transcript which have an adjusted p value below the given FDR cutoff of 0.01
+# resultsNames(dds) # ..to see what results look like
+
+# Normalization steps;
+# By setting blind to FALSE, the dispersion already estimated will be used to perform transformations, 
+# .. or if not present, they will be estimated using the current design formula. 
+# Further differential analyses 
+# Transformations: variance stabilizing transformations (VST) and regularized logarithm (rlog)
+# The point of these transformations is to remove the dependence of the variance on the mean, 
+# ... particularly the high variance of the logarithm of count data when the mean is low. 
+# First, we estimate size factors;
+dds <- estimateSizeFactors(dds)
+# .. then we perform the normalization;
+vsd <- vst(dds, blind=FALSE) # by setting blind = FALSE, the transformation would be blind to the sample information specified by the design formula
+
+# To check the effects of transformations on the variance
+# library("vsn")
+# vsd
+# meanSdPlot(assay(vsd))
+# Write our dataframe
+write.csv(assay(vsd), file = "vsd.csv")
