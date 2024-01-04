@@ -1,0 +1,19 @@
+universe = docker
+docker_image = nanozoo/rsem:latest
+arguments = $(sample)
+
+executable = RSEM_exec.sh
+log = $(sample)_RSEM.log
+output = $(sample)_RSEM.out
+error = $(sample)_RSEM.err
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+transfer_input_files = RSEM_exec.sh
+
+Requirements = (Target.HasCHTCStaging == true)
+request_cpus = 20
+request_memory = 50GB
+request_disk = 100GB
+
+queue sample from /path/to/samples.txt
