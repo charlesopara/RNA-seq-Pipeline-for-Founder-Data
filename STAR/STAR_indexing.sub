@@ -1,0 +1,19 @@
+universe = docker
+docker_image = bschiffthaler/ngs:latest
+arguments = $(sample)
+
+executable = STAR_indexing.sh
+log = $(sample)_indexing.log
+output = $(sample)_indexing.out
+error = $(sample)_indexing.err
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+transfer_input_files = STAR_indexing.sh
+
+Requirements = (Target.HasCHTCStaging == true)
+request_cpus = 25
+request_memory = 50GB
+request_disk = 100GB
+
+queue sample from /home/copara/STAR_indexing_samples.txto

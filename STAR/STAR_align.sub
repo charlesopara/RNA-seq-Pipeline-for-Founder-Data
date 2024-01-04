@@ -1,0 +1,19 @@
+universe = docker
+docker_image = bschiffthaler/ngs:latest
+arguments = $(sample)
+
+executable = STAR_align.sh
+log = $(sample).log
+output = $(sample).out
+error = $(sample).err
+
+should_transfer_files = YES
+when_to_transfer_output = ON_EXIT
+transfer_input_files = STAR_align.sh
+
+Requirements = (Target.HasCHTCStaging == true)
+request_cpus = 20
+request_memory = 50GB
+request_disk = 100GB
+
+queue sample from /path/to/samples.txt
