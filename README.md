@@ -5,6 +5,7 @@ The RNA-Seq Analysis Workflow
 <img width="106" alt="image" src="https://github.com/charlesopara/RNA-seq-Pipeline-for-Founder-Data/assets/155677132/75818ea8-07e2-4d14-b1e7-158c737852d2">
 
 Overview
+
 The current version of this walkthrough was developed with help of Colin Dewey and provides an overview of the analysis pipeline from pre-processed fastq files (Raw sequence data and QC report provided by Novogene) to the generation of gene and isoform matrices for further downstream analyses. 
 To meet the high computational demand of the analyses process, the first two steps of the pipeline (STAR and RSEM) have been modified to run on the UW Madison’s Centre for High Throughput Computing (CHTC) platform, Condor. 
 I have provided in addition to the main scripts, the actual job submission files used. For both steps, I utilize the docker containers with up-to-date image versions of the software, to run jobs and skip the process of software packaging and shipping to CHTC’s condor environments.
